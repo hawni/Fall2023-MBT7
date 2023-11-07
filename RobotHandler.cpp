@@ -6,20 +6,19 @@
 #include "nbpopen.hpp"
 #include <sys/types.h>
 #include <sys/ioctl.h>
-#include <sys/time.h>
+#include <sys/time.h> //-- What is This Used for ?
 #include <termios.h>
-#include <iostream> 
-#include <stdlib.h>
+#include <iostream> //-- What is This Used for ?
 #include <stdlib.h>
 #include <unistd.h>
-#include <dirent.h>
-#include <assert.h>
+#include <dirent.h> //-- What is This Used for ?
+#include <assert.h> //-- What is This Used for ?
 #include <cstring>
 #include <errno.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <math.h>
-#include <string> 
+#include <string> //-- What is This Used for ?
 
 
 typedef unsigned char uchar;
@@ -28,20 +27,20 @@ typedef double value_t;
 using namespace std;
 using namespace boost::interprocess;
 
-#define  MAX_READ_BUF         (1024)
-#define  BAUD_RATE            (1)
-#define  BASE_DIR             ("MRL")
-#define  BUTTON_ID      	  (200)
-#define  BT_RD_TIMEOUT        (0.01)
-#define  PRESSED        	  (1)
+#define  MAX_READ_BUF         	(1024)
+#define  BAUD_RATE            	(1)
+#define  BASE_DIR             	("MRL")
+#define  BUTTON_ID		(200)
+#define  BT_RD_TIMEOUT        	(0.01)
+#define  PRESSED        	(1)
 
-#define  BUTTON_LEFT    	  (1)
-#define  BUTTON_RIGHT   	  (2)
-#define  BUTTON_LEFT_RIGHT    (3)
+#define  BUTTON_LEFT    	(1)
+#define  BUTTON_RIGHT   	(2)
+#define  BUTTON_LEFT_RIGHT    	(3)
 
-#define  ROBOT_RUNNING        (1)
-#define  ROBOT_STOPED         (2)
-#define  ERROR_RUN			  (3)
+#define  ROBOT_RUNNING        	(1)
+#define  ROBOT_STOPED         	(2)
+#define  ERROR_RUN		(3)
 
 int fd = -1;
 int robot_status = ROBOT_STOPED;
@@ -51,7 +50,6 @@ std::string team_id;
 std::string username;
 
 double *shm_bt;
-
 DIR *dirp = 0;
 boost::interprocess::managed_shared_memory *managed_shm;
 
@@ -60,7 +58,7 @@ FILE *p_pipe[3];
 int log_file[3];
 
 std::string get_tty_path() {
-    const char *path = "/dev/";
+    const char *path = "/dev/"; //-- Where is /dev/ ? and What is Used for and What Can We See Inside It ?
     DIR *dirp = opendir(path);
     if (dirp == NULL)
         return "";
@@ -82,41 +80,14 @@ std::string get_tty_path() {
     return "";	
 }
 
-void stty_speed(int fd) {
-    int speed = 1000000;
-    // Default termios interface
-    struct termios tio;
-    if (tcgetattr(fd, &tio) != 0) {
-    }
-    if (cfsetspeed(&tio, speed) != 0) {
-    }
-    if (tcsetattr(fd, TCSANOW, &tio) != 0) {
-    }
-
-    // For linux:
-    struct serial_struct serinfo;
-    if (ioctl(fd, TIOCGSERIAL, &serinfo) < 0) {
-    }
-    serinfo.flags &= ~ASYNC_SPD_MASK;
-    serinfo.flags |= ASYNC_SPD_CUST;
-    serinfo.custom_divisor = serinfo.baud_base/((float)speed);
-    if (ioctl(fd, TIOCSSERIAL, &serinfo) < 0) {
-    }
-}
-
-uchar * serialize_packet(DynamixelPacket *pkt){
-	int len = pkt->length + 4;
-	uchar  *buff = (uchar *) malloc(len);
-	memcpy(buff , pkt , len);
-	return buff; 
-}
-
+//-- What Does this Function Do ?
 double get_time() {
     struct timeval t;
     gettimeofday(&t, NULL);
     return t.tv_sec + 1E-6*t.tv_usec;
 }
 
+//-- What is Dynamixel ?
 DynamixelPacket *parse_status_packet(const char *str) {
     DynamixelPacket *pkt;
     pkt->id = *(str+2);
@@ -127,43 +98,7 @@ DynamixelPacket *parse_status_packet(const char *str) {
     return pkt;
 }
 
-void get_status_packet(int fd , uchar *buff , DynamixelPacket *pkt){
-    double t0 = get_time();
-    std::string str;
-    while (get_time() - t0 < BT_RD_TIMEOUT) {
-        int r = read(fd, buff, MAX_READ_BUF);
-        if (r > 0) {
-            std::string s((char *)buff,r);
-            str += s;        
-            int nPacket = 0;
-            for (int i = 0 ; i < str.length() ; i++) {
-                nPacket = dynamixel_input(pkt, str.at(i), nPacket);
-                if (nPacket < 0) {
-                    // completed packet 
-                    return void();
-                }
-            }
-            usleep((useconds_t) 100);
-        } 
-    }
-}
-
-int open_tty() {
-    std::string ttyPath = "";
-    do {
-        sleep(1);
-        ttyPath = get_tty_path();
-    } while (ttyPath == "");
-    if (fd > -1) {
-        close(fd);
-    }
-    fd = open(ttyPath.c_str() , O_RDWR + O_NOCTTY + O_NONBLOCK);
-    if (fd < 0) {
-        exit (EXIT_FAILURE);
-    }
-    stty_speed(fd);
-}
-
+//-- What Does this Function Do ?
 int read_button_data() {
     if (robot_status == ROBOT_STOPED) {
         int id = 200;
@@ -184,13 +119,14 @@ int read_button_data() {
     }
 }
 
+//-- What Does this Function Do ?
 int run_robot() {
     std::string code_dir("/home/robot/MRL/Player");
     int ret = chdir(code_dir.c_str());
     assert(ret==0);
     close(fd);
     cmd = new std::string[3];
-    cmd[0] = "sudo -E lua run_dcm.lua";
+    cmd[0] = "sudo -E lua run_dcm.lua"; //-- What is DCM ?
     cmd[1] = "sudo -E lua run_cognition.lua";
     cmd[2] = "sudo -E lua run_main.lua";
     for (int i = 0 ; i < 3 ; i++) {
@@ -204,46 +140,7 @@ int run_robot() {
 }
 
 int kill_robot() {
-    system("sudo killall lua");
-    system("sudo rm -r /dev/shm/*");
+    system("sudo killall lua"); //-- What is Lua and Its Relation with C++ ?
+    system("sudo rm -r /dev/shm/*"); //-- What is /dev/shm and What is Used for ?
     return ROBOT_STOPED;
-}
-
-int main(void) {
-    open_tty();
-    int data;
-    int btn[2];
-    cout << "Start robot handler" << endl;
-    while (true) {
-        data = read_button_data();
-        btn[0] = (int) floor(data/2);
-        btn[1] = data % 2;
-        if (btn[0] == PRESSED && robot_status == ROBOT_STOPED ) {
-            cout << "robot has been started" << endl;
-            int r_stat = run_robot();
-            if (r_stat == ROBOT_RUNNING ) {
-                robot_status = ROBOT_RUNNING ;
-                std::string shm_name("dcmSensor");
-                managed_shm = new boost::interprocess::managed_shared_memory(boost::interprocess::open_or_create,shm_name.c_str() , 65536); 
-                shm_bt = managed_shm->find_or_construct<double>("button")[2]();
-            }
-        }
-        else if (btn[1] == PRESSED && robot_status == ROBOT_RUNNING ) {
-            cout << "killled" << endl;
-            kill_robot();
-            // destroy shm
-            delete managed_shm;
-            robot_status = ROBOT_STOPED;
-            // open tty to get button data
-            open_tty();
-        }
-        if (robot_status == ROBOT_RUNNING && log_enabled) {
-            log_process();
-        }
-        if( robot_status == ROBOT_STOPED && get_tty_path()=="") {
-            open_tty();
-        }
-        usleep(10000);
-    }
-    exit(EXIT_SUCCESS);
 }
