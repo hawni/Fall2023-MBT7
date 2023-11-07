@@ -4,6 +4,6 @@ Task Description: Inside this repository, you will find various files, aside fro
 
 ### Task Submission :
 * Provide an Explanation of Code Functionality.
-* if You Identify any Issues within the Code, You Should Possess the Ability to Rectify Them.
+* Comment Your Corrections and What You Understand within Code
 * Identify and Research any Libraries that have been Included in the Codebase.
-* Comment Your Corrections within Code
+* if You Identify any Issues within the Code, You Should Possess the Ability to Rectify Them.
